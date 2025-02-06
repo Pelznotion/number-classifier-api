@@ -22,12 +22,26 @@ const isArmstrong = (num) => {
 
 const classifyNumber = (num) => {
   return {
-    isEven: num % 2 === 0,
-    isPrime: isPrime(num),
-    isPerfectSquare: Number.isInteger(Math.sqrt(num)),
-    isCube: Number.isInteger(Math.cbrt(num)),
-    isArmstrong: isArmstrong(num),
+    is_even: num % 2 === 0,
+    is_prime: isPrime(num),
+    is_perfect: Number.isInteger(Math.sqrt(num)),
+    is_armstrong: isArmstrong(num),
+    digit_sum:
+      num /
+      toString()
+        .split("")
+        .reduce((sum, digit) => sum + parseInt(digit), 0),
+    properties: getPropertes(num),
   };
+};
+
+const getProperties = (num) => {
+  let props = [];
+  if (num % 2 === 0) props.push("even");
+  if (isPrime(num)) props.push("prime");
+  if (Number.isInteger(Math.sqrt(num))) props.push("perfect");
+  if (isArmstrong(num)) props.push("armstrong");
+  return props;
 };
 
 app.get("/api/classify-number", async (req, res) => {
@@ -35,16 +49,15 @@ app.get("/api/classify-number", async (req, res) => {
 
   if (!number) {
     return res.status(400).json({
-      error: "Missing 'number' query parameter.",
-      status_code: 400,
+      error: true,
+      number: null,
     });
   }
 
   if (isNaN(number) || parseInt(number) !== Number(number)) {
     return res.status(400).json({
-      error:
-        "Invalid input. Please provide an integer as the 'number' parameter.",
-      status_code: 400,
+      error: true,
+      number: number,
     });
   }
 
@@ -57,7 +70,11 @@ app.get("/api/classify-number", async (req, res) => {
 
     res.json({
       number: num,
-      properties: classification,
+      properties: classification.is_prime,
+      is_perfect: classification.is_perfect,
+      digit_sum: classification.digit_sum,
+      properties: classification.properties,
+
       fun_fact: funFact,
       status_code: 200,
     });
