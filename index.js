@@ -33,6 +33,13 @@ const classifyNumber = (num) => {
 app.get("/api/classify-number", async (req, res) => {
   const { number } = req.query;
 
+  if (!number) {
+    return res.status(400).json({
+      error: "Missing 'number' query parameter.",
+      status_code: 400,
+    });
+  }
+
   if (!number || isNaN(number) || parseInt(number) !== Number(number)) {
     return res.status(400).json({
       error:
