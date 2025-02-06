@@ -31,7 +31,7 @@ const classifyNumber = (num) => {
       toString()
         .split("")
         .reduce((sum, digit) => sum + parseInt(digit), 0),
-    properties: getPropertes(num),
+    properties: getProperties(num),
   };
 };
 
@@ -70,11 +70,10 @@ app.get("/api/classify-number", async (req, res) => {
 
     res.json({
       number: num,
-      properties: classification.is_prime,
+      is_prime: classification.is_prime,
       is_perfect: classification.is_perfect,
       digit_sum: classification.digit_sum,
       properties: classification.properties,
-
       fun_fact: funFact,
       status_code: 200,
     });
