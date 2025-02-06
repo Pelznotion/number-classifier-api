@@ -3,87 +3,91 @@ const cors = require("cors");
 const axios = require("axios");
 
 const app = express();
-app.use(cors());
+const PORT = process.env.PORT || 10000;
 
-const isPrime = (num) => {
+app.use(cors());
+app.use(express.json());
+
+function isPrime(num) {
   if (num < 2) return false;
   for (let i = 2; i <= Math.sqrt(num); i++) {
     if (num % i === 0) return false;
   }
   return true;
-};
+}
 
-const isArmstrong = (num) => {
-  const digits = num.toString().split("").map(Number);
-  const power = digits.length;
-  const sum = digits.reduce((acc, digit) => acc + Math.pow(digit, power), 0);
-  return sum === num;
-};
+function isArmstrong(num) {
+  let sum = 0,
+    temp = Math.abs(num),
+    digits = num.toString().length;
+  while (temp > 0) {
+    sum += Math.pow(temp % 10, digits);
+    temp = Math.floor(temp / 10);
+  }
+  return sum === Math.abs(num);
+}
+function isEven(num) {
+  return num % 2 === 0;
+}
+function getDigitSum(num) {
+  return Math.abs(num)
+    .toString()
+    .split("")
+    .reduce((sum, digit) => sum + parseInt(digit), 0);
+}
 
-const classifyNumber = (num) => {
+function classifyNumber(num) {
+  let properties = [];
+  if (isEven(num)) properties.push("even");
+  else properties.push("odd");
+
+  if (isArmstrong(num)) properties.push("armstrong");
+  if (isPerfect(num)) properties.push("perfect");
+
+  if (num > 1 && isPrime(num)) properties.push("prime");
   return {
-    is_even: num % 2 === 0,
+    number: num,
     is_prime: isPrime(num),
-    is_perfect: Number.isInteger(Math.sqrt(num)),
-    is_armstrong: isArmstrong(num),
-    digit_sum:
-      num /
-      toString()
-        .split("")
-        .reduce((sum, digit) => sum + parseInt(digit), 0),
-    properties: getProperties(num),
+    is_perfect: isPerfect(num),
+    properties: properties,
+    digit_sum: getDigitSum(num),
   };
-};
-
-const getProperties = (num) => {
-  let props = [];
-  if (num % 2 === 0) props.push("even");
-  if (isPrime(num)) props.push("prime");
-  if (Number.isInteger(Math.sqrt(num))) props.push("perfect");
-  if (isArmstrong(num)) props.push("armstrong");
-  return props;
-};
+}
 
 app.get("/api/classify-number", async (req, res) => {
-  const { number } = req.query;
-
-  if (!number) {
-    return res.status(400).json({
-      error: true,
-      number: null,
-    });
-  }
-
-  if (isNaN(number) || parseInt(number) !== Number(number)) {
-    return res.status(400).json({
-      error: true,
-      number: number,
-    });
-  }
-
-  const num = parseInt(number, 10);
-  const classification = classifyNumber(num);
-
   try {
-    const response = await axios.get(`http://numbersapi.com/${num}`);
-    const funFact = response.data;
+    let { number } = req.query;
 
-    res.json({
-      number: num,
-      is_prime: classification.is_prime,
-      is_perfect: classification.is_perfect,
-      digit_sum: classification.digit_sum,
-      properties: classification.properties,
-      fun_fact: funFact,
-      status_code: 200,
-    });
+    if (!number || number.trim() === "") {
+      return res.status(400).json({
+        error: true,
+        number: " ",
+      });
+    }
+    let num = parseInt(number);
+    if (isNaN(num)) {
+      return res.status(400).json({
+        error: true,
+        message: " Invalid number format",
+      });
+    }
+    let result = classifyNumber(num);
+
+    let funFact = "";
+
+    try {
+      const response = await axios.get(`http://numbersapi.com/${num}`);
+      const funFact = response.data;
+    } catch (apiError) {
+      console.error("Error fetching fun fact", apiError.message);
+    }
+    return res.status(200).json({ ...result, fun_fact: funFact });
   } catch (error) {
-    res.status(500).json({
-      error: "Failed to retrieve fun fact from NumbersAPI",
-      status_code: 500,
-    });
+    console.error("Internal Server Error:", error);
+    return res
+      .status(500)
+      .json({ error: true, message: "Internal server error" });
   }
 });
 
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
