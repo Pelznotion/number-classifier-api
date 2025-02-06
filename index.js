@@ -39,6 +39,7 @@ const classifyNumber = (num) => {
   if (num % 2 === 0) properties.push("even");
   else properties.push("odd");
   if (isArmstrong(num)) properties.push("armstrong");
+  properties.sort();
   return {
     number: num,
     is_prime: isPrime(num),
@@ -55,7 +56,7 @@ app.get("/api/classify-number", async (req, res) => {
   if (number === undefined) {
     return res.status(400).json({ error: true, number: "" });
   }
-  number = number.trim();
+  number = String(number).trim();
   if (!/^[-]?\d+$/.test(number)) {
     return res.status(400).json({ error: true, number });
   }
