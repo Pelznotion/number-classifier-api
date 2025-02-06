@@ -40,7 +40,7 @@ app.get("/api/classify-number", async (req, res) => {
     });
   }
 
-  if (!number || isNaN(number) || parseInt(number) !== Number(number)) {
+  if (isNaN(number) || parseInt(number) !== Number(number)) {
     return res.status(400).json({
       error:
         "Invalid input. Please provide an integer as the 'number' parameter.",
